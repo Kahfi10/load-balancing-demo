@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-lb
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx-roundrobin.conf:/etc/nginx/roundrobin.conf:ro
+      - ./nginx-leastconn.conf:/etc/nginx/leastconn.conf:ro
+    command: >
+      sh -c "cp /etc/nginx/roundrobin.conf /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
+    networks:
+      - parkir-network
+
+  gate-utama:
+    build: ./backend
+    container_name: gate-utama
+    environment:
+      - GATE_NAME=GATE-UTAMA
+      - PROCESSING_DELAY=2.0
+      - SERVER_PORT=5000
+    ports:
+      - "5001:5000"
+    networks:
+      - parkir-network
+
+  gate-ekspres:
+    build: ./backend
+    container_name: gate-ekspres
+    environment:
+      - GATE_NAME=GATE-EKSPRES
+      - PROCESSING_DELAY=0.1
+      - SERVER_PORT=5000
+    ports:
+      - "5002:5000"
+    networks:
+      - parkir-network
+
+  gate-khusus:
+    build: ./backend
+    container_name: gate-khusus
+    environment:
+      - GATE_NAME=GATE-KHUSUS
+      - PROCESSING_DELAY=0.1
+      - SERVER_PORT=5000
+    ports:
+      - "5003:5000"
+    networks:
+      - parkir-network
+
+networks:
+  parkir-network:
+    driver: bridge
